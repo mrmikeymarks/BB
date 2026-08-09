@@ -1,0 +1,67 @@
+{
+    "buildTypes": {
+        "plain": {},
+        "debug": {
+            "buildOptions": ["debugMode", "debugInfo"]
+        },
+        "release": {
+            "buildOptions": ["releaseMode", "optimize", "inline"]
+        },
+        "release-debug": {
+            "buildOptions": ["releaseMode", "optimize", "inline", "debugInfo"]
+        },
+        "release-nobounds": {
+            "buildOptions": ["releaseMode", "optimize", "inline", "noBoundsCheck"]
+        },
+        "unittest": {
+            "buildOptions": ["unittests", "debugMode", "debugInfo"]
+        },
+        "docs": {
+            "buildOptions": ["syntaxOnly"],
+            "dflags": ["-Dddocs"]
+        },
+        "ddox": {
+            "buildOptions": ["syntaxOnly"],
+            "dflags": ["-Xfdocs.json", "-Df__dummy.html"]
+        },
+        "profile": {
+            "buildOptions": ["profile", "optimize", "inline", "debugInfo"]
+        },
+        "profile-gc": {
+            "buildOptions": ["profileGC", "debugInfo"]
+        },
+        "cov": {
+            "buildOptions": ["coverage", "debugInfo"]
+        },
+        "cov-ctfe": {
+            "buildOptions": ["coverageCTFE", "debugInfo"]
+        },
+        "unittest-cov": {
+            "buildOptions": ["unittests", "coverage", "debugMode", "debugInfo"]
+        },
+        "unittest-cov-ctfe": {
+            "buildOptions": ["unittests", "coverageCTFE", "debugMode", "debugInfo"]
+        },
+        "syntax": {
+            "buildOptions": ["syntaxOnly"]
+        }
+    }
+}
+
+"dependencies": {
+    "vibe-d": "~>0.9.5",
+
+    "localdep": {
+        "path": "../localdep",
+        "optional": true,
+        "default": true
+    },
+    "remote": {
+        "repository": "git+https://example.org/remote.git",
+        "version": "a1b2c3d4"
+    },
+    "modified": {
+        "version": "~>1.2.3",
+        "dflags": ["--special-flag", "-O4"]
+    }
+}
