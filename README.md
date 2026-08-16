@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # BB Notifier
 
 A small Flask web app that sends push notifications through **Pushover** and **ntfy**.
@@ -96,3 +97,38 @@ pytest
 
 The suite mocks all outgoing HTTP, so it runs offline. CI (`.github/workflows/python-app.yml`)
 runs flake8 and pytest on every push/PR to `main`.
+=======
+# BB – To-Do List App
+
+A lightweight, dependency-free to-do list that runs entirely in the browser.
+
+## Features
+
+- Add, complete/uncomplete, and delete tasks
+- Filter by All / Active / Completed
+- Clear all completed tasks at once
+- Items are persisted in **browser local storage** – they survive page reloads
+
+## Running locally
+
+No build step required. Just open `index.html` in any modern browser:
+
+```bash
+# macOS
+open index.html
+
+# Linux
+xdg-open index.html
+
+# Or serve it with any static file server, e.g.:
+npx serve .
+```
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `index.html` | App markup + JavaScript logic |
+| `style.css` | Styles |
+| `README.md` | This file |
+>>>>>>> 3303f04279fe4ed015ca482433a4c23f7fb1b887
