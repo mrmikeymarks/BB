@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BB Notifier</title>
+<style>
+  :root {
+    --bg: #10141a; --card: #1a2029; --border: #2c3542; --text: #e6ebf2;
+    --muted: #93a0b4; --accent: #4f9cf9; --ok: #34c98e; --err: #f0647c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 2rem 1rem 4rem; background: var(--bg); color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 880px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .sub { color: var(--muted); margin: 0 0 1.5rem; }
+  .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.1rem 1.2rem 1.2rem; margin-bottom: 1rem;
+  }
+  .card h2 { margin: 0 0 .9rem; font-size: 1.05rem; }
+  label { display: block; margin: .6rem 0 .2rem; color: var(--muted); font-size: .82rem; }
+  input, textarea, select {
+    width: 100%; padding: .5rem .6rem; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font: inherit;
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+  .row { display: flex; gap: .6rem; margin-top: .9rem; flex-wrap: wrap; align-items: center; }
+  button {
+    padding: .5rem .95rem; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--accent); color: #fff; font: inherit; cursor: pointer;
+  }
+  button.secondary { background: transparent; color: var(--text); }
+  button:disabled { opacity: .5; cursor: wait; }
+  .status { font-size: .85rem; min-height: 1.2em; margin-top: .6rem; white-space: pre-wrap; }
+  .status.ok { color: var(--ok); }
+  .status.err { color: var(--err); }
+  .checks { display: flex; gap: 1.2rem; margin: .4rem 0 .2rem; }
+  .checks label { display: flex; align-items: center; gap: .4rem; margin: 0; color: var(--text); font-size: .9rem; }
+  .checks input { width: auto; }
+  .hint { color: var(--muted); font-size: .78rem; margin-top: .25rem; }
+  .two { display: grid; gap: .8rem; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 560px) { .two { grid-template-columns: 1fr; } }
+  footer { max-width: 880px; margin: 1.5rem auto 0; text-align: center; }
+  footer a { color: var(--muted); font-size: .85rem; text-decoration: none; }
+  footer a:hover { color: var(--text); }
+</style>
+</head>
+<body>
+<main>
+  <h1>BB Notifier</h1>
+  <p class="sub">Send push notifications through Pushover and ntfy — including self-hosted / remote servers.</p>
+
+  <div class="grid">
+    <section class="card" id="ntfy-card">
+      <h2>ntfy server</h2>
+      <label for="ntfy-server">Server URL</label>
+      <input id="ntfy-server" placeholder="https://ntfy.sh or http://192.168.1.50:8093">
+      <div class="hint">Point this at any ntfy instance, e.g. one running on another server.</div>
+      <label for="ntfy-topic">Topic</label>
+      <input id="ntfy-topic" placeholder="my-alerts">
+      <label for="ntfy-token">Access token (optional)</label>
+      <input id="ntfy-token" type="password" autocomplete="off" placeholder="tk_...">
+      <div class="row">
+        <button data-save="ntfy">Save</button>
+        <button class="secondary" data-test="ntfy">Test connection</button>
+      </div>
+      <div class="status" id="ntfy-status"></div>
+    </section>
+
+    <section class="card" id="pushover-card">
+      <h2>Pushover server</h2>
+      <label for="pushover-api">API base URL</label>
+      <input id="pushover-api" placeholder="https://api.pushover.net">
+      <div class="hint">Default is the official API; change it to use a compatible gateway/proxy.</div>
+      <div class="two">
+        <div>
+          <label for="pushover-token">Application token</label>
+          <input id="pushover-token" type="password" autocomplete="off">
+        </div>
+        <div>
+          <label for="pushover-user">User key</label>
+          <input id="pushover-user" type="password" autocomplete="off">
+        </div>
+      </div>
+      <div class="row">
+        <button data-save="pushover">Save</button>
+        <button class="secondary" data-test="pushover">Test connection</button>
+      </div>
+      <div class="status" id="pushover-status"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Send a notification</h2>
+    <div class="checks">
+      <label><input type="checkbox" id="send-ntfy" checked> ntfy</label>
+      <label><input type="checkbox" id="send-pushover" checked> Pushover</label>
+    </div>
+    <div class="two">
+      <div>
+        <label for="msg-title">Title</label>
+        <input id="msg-title" placeholder="Backup finished">
+      </div>
+      <div>
+        <label for="msg-priority">Priority</label>
+        <select id="msg-priority">
+          <option value="">default</option>
+          <option value="min">min</option>
+          <option value="low">low</option>
+          <option value="normal">normal</option>
+          <option value="high">high</option>
+          <option value="urgent">urgent</option>
+        </select>
+      </div>
+    </div>
+    <label for="msg-body">Message</label>
+    <textarea id="msg-body" placeholder="Everything went fine."></textarea>
+    <div class="two">
+      <div>
+        <label for="msg-tags">ntfy tags (comma-separated)</label>
+        <input id="msg-tags" placeholder="white_check_mark,backup">
+      </div>
+      <div>
+        <label for="msg-click">ntfy click URL</label>
+        <input id="msg-click" placeholder="https://example.org/status">
+      </div>
+    </div>
+    <div class="row">
+      <button id="send-btn">Send</button>
+    </div>
+    <div class="status" id="send-status"></div>
+  </section>
+</main>
+<footer><a href="/privacy">Privacy Policy</a></footer>
+
+<script>
+(function () {
+  "use strict";
+
+  function $(id) { return document.getElementById(id); }
+
+  function setStatus(id, ok, text) {
+    var el = $(id);
+    el.textContent = text;
+    el.className = "status " + (ok ? "ok" : "err");
+  }
+
+  function api(path, options) {
+    return fetch(path, options).then(function (resp) {
+      return resp.json().then(function (body) { return { status: resp.status, body: body }; });
+    });
+  }
+
+  function jsonPost(path, payload) {
+    return api(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  function savedPlaceholder(input, configured) {
+    if (configured) { input.placeholder = "saved — leave blank to keep"; }
+  }
+
+  function loadConfig() {
+    api("/api/config").then(function (r) {
+      var c = r.body;
+      $("ntfy-server").value = c.ntfy.server_url || "";
+      $("ntfy-topic").value = c.ntfy.topic || "";
+      savedPlaceholder($("ntfy-token"), c.ntfy.token_configured);
+      $("pushover-api").value = c.pushover.api_url || "";
+      savedPlaceholder($("pushover-token"), c.pushover.app_token_configured);
+      savedPlaceholder($("pushover-user"), c.pushover.user_key_configured);
+    });
+  }
+
+  function payloadFor(provider) {
+    if (provider === "ntfy") {
+      return { ntfy: {
+        server_url: $("ntfy-server").value.trim(),
+        topic: $("ntfy-topic").value.trim(),
+        token: $("ntfy-token").value.trim()
+      } };
+    }
+    return { pushover: {
+      api_url: $("pushover-api").value.trim(),
+      app_token: $("pushover-token").value.trim(),
+      user_key: $("pushover-user").value.trim()
+    } };
+  }
+
+  document.querySelectorAll("[data-save]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var provider = btn.getAttribute("data-save");
+      btn.disabled = true;
+      jsonPost("/api/config", payloadFor(provider)).then(function (r) {
+        btn.disabled = false;
+        if (r.status === 200) {
+          setStatus(provider + "-status", true, "Settings saved.");
+          loadConfig();
+        } else {
+          setStatus(provider + "-status", false, r.body.error || "Failed to save settings.");
+        }
+      });
+    });
+  });
+
+  document.querySelectorAll("[data-test]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var provider = btn.getAttribute("data-test");
+      btn.disabled = true;
+      setStatus(provider + "-status", true, "Testing…");
+      jsonPost("/api/test/" + provider, {}).then(function (r) {
+        btn.disabled = false;
+        setStatus(provider + "-status", r.body.ok, r.body.detail || r.body.error || "");
+      });
+    });
+  });
+
+  $("send-btn").addEventListener("click", function () {
+    var providers = [];
+    if ($("send-ntfy").checked) { providers.push("ntfy"); }
+    if ($("send-pushover").checked) { providers.push("pushover"); }
+    var payload = {
+      providers: providers,
+      title: $("msg-title").value,
+      message: $("msg-body").value,
+      priority: $("msg-priority").value,
+      options: {
+        ntfy: { tags: $("msg-tags").value, click: $("msg-click").value }
+      }
+    };
+    var btn = $("send-btn");
+    btn.disabled = true;
+    setStatus("send-status", true, "Sending…");
+    jsonPost("/api/notify", payload).then(function (r) {
+      btn.disabled = false;
+      if (r.body.error) {
+        setStatus("send-status", false, r.body.error);
+        return;
+      }
+      var lines = Object.keys(r.body.results).map(function (name) {
+        var res = r.body.results[name];
+        return (res.ok ? "✓ " : "✗ ") + name + ": " + res.detail;
+      });
+      setStatus("send-status", r.body.ok, lines.join("\n"));
+    });
+  });
+
+  loadConfig();
+})();
+</script>
+</body>
+</html>
