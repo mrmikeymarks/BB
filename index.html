@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To-Do List</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>✅ To-Do List</h1>
+      <p id="summary">0 tasks remaining</p>
+    </header>
+
+    <form class="add-form" id="add-form">
+      <input
+        type="text"
+        id="new-todo"
+        placeholder="What needs to be done?"
+        autocomplete="off"
+        maxlength="200"
+      />
+      <button type="submit">Add</button>
+    </form>
+
+    <div class="filters">
+      <button class="active" data-filter="all">All</button>
+      <button data-filter="active">Active</button>
+      <button data-filter="completed">Completed</button>
+    </div>
+
+    <ul class="todo-list" id="todo-list"></ul>
+
+    <footer class="app-footer">
+      <span id="footer-count">0 items</span>
+      <button id="clear-completed">Clear completed</button>
+    </footer>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'bb-todos';
+
+    // --- State ---
+    let todos = load();
+    let filter = 'all';
+
+    function load() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+      } catch {
+        // storage unavailable – silently continue
+      }
+    }
+
+    // --- Render ---
+    function render() {
+      const list = document.getElementById('todo-list');
+      const visible = todos.filter(t =>
+        filter === 'all' ? true :
+        filter === 'active' ? !t.done :
+        t.done
+      );
+
+      if (visible.length === 0) {
+        list.innerHTML = `<li class="empty-state">${
+          filter === 'completed' ? 'No completed tasks yet.' :
+          filter === 'active'    ? 'Nothing left to do! 🎉' :
+                                   'Add your first task above.'
+        }</li>`;
+      } else {
+        list.innerHTML = visible.map(t => `
+          <li class="todo-item${t.done ? ' completed' : ''}" data-id="${t.id}">
+            <input type="checkbox" id="cb-${t.id}" ${t.done ? 'checked' : ''}
+                   onchange="toggle('${t.id}')" />
+            <label for="cb-${t.id}">${escHtml(t.text)}</label>
+            <button class="delete-btn" onclick="remove('${t.id}')"
+                    title="Delete" aria-label="Delete todo">✕</button>
+          </li>
+        `).join('');
+      }
+
+      const remaining = todos.filter(t => !t.done).length;
+      document.getElementById('summary').textContent =
+        `${remaining} task${remaining !== 1 ? 's' : ''} remaining`;
+      document.getElementById('footer-count').textContent =
+        `${todos.length} item${todos.length !== 1 ? 's' : ''}`;
+
+      document.querySelectorAll('.filters button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+      });
+    }
+
+    function escHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // --- Actions ---
+    function addTodo(text) {
+      text = text.trim();
+      if (!text) return;
+      todos.push({ id: crypto.randomUUID(), text, done: false });
+      save();
+      render();
+    }
+
+    function toggle(id) {
+      const t = todos.find(t => t.id === id);
+      if (t) { t.done = !t.done; save(); render(); }
+    }
+
+    function remove(id) {
+      todos = todos.filter(t => t.id !== id);
+      save();
+      render();
+    }
+
+    // --- Event listeners ---
+    document.getElementById('add-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const input = document.getElementById('new-todo');
+      addTodo(input.value);
+      input.value = '';
+    });
+
+    document.querySelectorAll('.filters button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        filter = btn.dataset.filter;
+        render();
+      });
+    });
+
+    document.getElementById('clear-completed').addEventListener('click', () => {
+      todos = todos.filter(t => !t.done);
+      save();
+      render();
+    });
+
+    // --- Init ---
+    render();
+  </script>
+</body>
+</html>
