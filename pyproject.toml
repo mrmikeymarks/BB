@@ -1,3 +1,33 @@
+[project]
+name = "bb-notifier"
+description = "A small Flask web app that sends notifications through Pushover and ntfy."
+readme = "README.md"
+requires-python = ">=3.10"
+dynamic = ["version"]
+dependencies = [
+    "Flask>=3.0",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "flake8",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["notifier_app", "notifier_app.notifiers"]
+
+[tool.setuptools.dynamic]
+version = {attr = "notifier_app.__version__"}
+
+[tool.setuptools.package-data]
+notifier_app = ["templates/*.html"]
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
